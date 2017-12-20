@@ -52,7 +52,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/BangKok',
 
     /*
     |--------------------------------------------------------------------------
@@ -162,6 +162,8 @@ return [
         App\Providers\AuthServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+
+        App\Providers\RepositoryBindServiceProvider::class,
 
     ],
 
