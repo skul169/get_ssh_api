@@ -17,4 +17,5 @@ Route::get('/', function () {
 
 Route::group(['prefix' => 'api'], function () {
     Route::get('/add_clone', 'ApiController@addClone');
+    Route::get('/get_clone', 'ApiController@getClone');
 });

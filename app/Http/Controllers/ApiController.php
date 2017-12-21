@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use Crypt;
 use Auth;
+use DB;
 
 class ApiController extends Controller
 {
@@ -38,10 +39,19 @@ class ApiController extends Controller
             'token' => $token,
             'sex' => $sex,
             'birthday' => $birthday,
-//            'created_at' => '2017-12-24 00:00:01',
-//            'updated_at' => '2017-12-24 00:00:01',
         ]);
 
         return response()->json(['success' => true], 200);
+    }
+
+    public function getClone() {
+        $first = DB::table('clone')->orderBy('updated_at', 'asc')->take(1)->lockForUpdate()->get();
+        if (!isset($first[0])) {
+            return response()->json(['success' => false], 200);
+        }
+
+        \Log::error('ID ' . $first[0]->id);
+        DB::update('update clone set updated_at = "'. date('Y-m-d H:i:s') .'" where id = ' . $first[0]->id);
+        return response()->json(['success' => true, 'data' => $first[0]], 200);
     }
 }
