@@ -6,52 +6,76 @@ use Illuminate\Support\Facades\Input;
 use Crypt;
 use Auth;
 use DB;
+use \Cache;
 
 class ApiController extends Controller
 {
-    /** @var CloneRepositoryInterface */
-    protected $cloneRepository;
-
-    public function __construct(CloneRepositoryInterface $cloneRepository)
+    public function getSsh()
     {
-        $this->cloneRepository = $cloneRepository;
-    }
+        $ssh_folder_path = env('SSH_PATH', '/var/www/get_ssh');
 
-    public function addClone()
-    {
-        $uid = Input::get('uid');
-        $first = Input::get('first');
-        $last = Input::get('last');
-        $email = Input::get('email');
-        $pass = Input::get('pass');
-        $cookie = Input::get('cookie');
-        $token = Input::get('token');
-        $sex = Input::get('sex');
-        $birthday = Input::get('birthday');
-
-        $user = $this->cloneRepository->create([
-            'uid' => $uid,
-            'first' => $first,
-            'last' => $last,
-            'email' => $email,
-            'pass' => $pass,
-            'cookie' => $cookie,
-            'token' => $token,
-            'sex' => $sex,
-            'birthday' => $birthday,
-        ]);
-
-        return response()->json(['success' => true], 200);
-    }
-
-    public function getClone() {
-        $first = DB::table('clone')->orderBy('updated_at', 'asc')->take(1)->lockForUpdate()->get();
-        if (!isset($first[0])) {
-            return response()->json(['success' => false], 200);
+        $data = array();
+        if (Cache::has('get_ssh')) {
+            $data = Cache::get('get_ssh', array());
         }
 
-        \Log::error('ID ' . $first[0]->id);
-        DB::update('update clone set updated_at = "'. date('Y-m-d H:i:s') .'" where id = ' . $first[0]->id);
-        return response()->json(['success' => true, 'data' => $first[0]], 200);
+        if (count($data) == 0) {
+            $data = array();
+
+            $files = scandir($ssh_folder_path);
+            foreach ($files as $key => $value) {
+                if ($value != '.' && $value != '..') {
+                    $data[] = $value;
+                }
+            }
+
+            shuffle($data);
+            Cache::add('get_ssh', $data, 0);
+        }
+
+        $max_key = max(array_keys($data));
+        $file_name = $data[$max_key];
+
+        unset($data[$max_key]);
+        Cache::forget('get_ssh');
+        Cache::add('get_ssh', $data, 0);
+
+        return response()->json(file_get_contents($ssh_folder_path . '/' . $file_name), 200);
+    }
+
+    public function getAvatar() {
+        $continent = Input::get('continent', '');
+        $gender = Input::get('gender', '');
+
+        $ssh_folder_path = env('SSH_CONTINENT_PATH', '/var/www/continent');
+        $ssh_folder_path = $ssh_folder_path . '/' . $continent . '/' . $gender;
+
+        $data = array();
+        if (Cache::has('get_continent_ssh_' . $continent . '_' . $gender)) {
+            $data = Cache::get('get_continent_ssh_' . $continent . '_' . $gender, array());
+        }
+
+        if (count($data) == 0) {
+            $data = array();
+
+            $files = scandir($ssh_folder_path);
+            foreach ($files as $key => $value) {
+                if ($value != '.' && $value != '..') {
+                    $data[] = $value;
+                }
+            }
+
+            shuffle($data);
+            Cache::add('get_continent_ssh_' . $continent . '_' . $gender, $data, 0);
+        }
+
+        $max_key = max(array_keys($data));
+        $file_name = $data[$max_key];
+
+        unset($data[$max_key]);
+        Cache::forget('get_continent_ssh_' . $continent . '_' . $gender);
+        Cache::add('get_continent_ssh_' . $continent . '_' . $gender, $data, 0);
+
+        return response()->json(file_get_contents($ssh_folder_path . '/' . $file_name), 200);
     }
 }

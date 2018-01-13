@@ -16,6 +16,7 @@ Route::get('/', function () {
 });
 
 Route::group(['prefix' => 'api'], function () {
-    Route::get('/add_clone', 'ApiController@addClone');
-    Route::get('/get_clone', 'ApiController@getClone');
+    Route::get('/get_ssh', 'ApiController@getSsh');
+    Route::get('/get_avatar', 'ApiController@getAvatar');
+
 });
