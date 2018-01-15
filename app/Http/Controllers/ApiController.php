@@ -35,6 +35,26 @@ class ApiController extends Controller
 
         $max_key = max(array_keys($data));
         $file_name = $data[$max_key];
+        if (file_exists($ssh_folder_path . '/' . $file_name)) {
+            unset($data[$max_key]);
+            Cache::forget('get_ssh');
+            Cache::add('get_ssh', $data, 0);
+        } else {
+            Cache::forget('get_ssh');
+            $data = array();
+
+            $files = scandir($ssh_folder_path);
+            foreach ($files as $key => $value) {
+                if ($value != '.' && $value != '..') {
+                    $data[] = $value;
+                }
+            }
+
+            shuffle($data);
+            Cache::add('get_ssh', $data, 0);
+            $max_key = max(array_keys($data));
+            $file_name = $data[$max_key];
+        }
 
         unset($data[$max_key]);
         Cache::forget('get_ssh');
